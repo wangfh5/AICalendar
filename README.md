@@ -2,6 +2,8 @@
 
 AI Calendar是一个基于Android原生开发的智能日历应用，它可以通过自然语言处理(NLP)将用户的文本描述自动转换为标准的日历事件。
 
+> 本项目在 [Cursor](https://cursor.com/) 和 [WindSurf](https://windsurfai.org/) 的强大AI助手支持下完成。
+
 ## 项目概述
 
 本项目使用Kotlin和Jetpack Compose开发，采用MVVM架构模式，主要特点：
@@ -36,8 +38,14 @@ app/
 
 ## 使用说明
 
+### 开发环境配置
+1. 下载并安装 [Android Studio](https://developer.android.com/studio)（推荐使用最新版本）
+2. 克隆项目后使用 Android Studio 打开
+3. 等待 Gradle 自动同步完成
+4. 如遇到依赖问题，请尝试 "File -> Invalidate Caches / Restart"
+
 ### 基本设置
-1. 首次使用时，在侧边栏设置API密钥
+1. 首次使用时，在APP的侧边栏设置 [DeepSeek](https://platform.deepseek.com/) API密钥
 2. 确保应用有网络访问和日历读写权限
 
 ### 创建日历事件
