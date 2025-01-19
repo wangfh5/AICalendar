@@ -12,5 +12,5 @@ data class EventData(
     val description: String? = null,
     val location: String? = null,
     val attendees: List<String> = emptyList(),
-    val reminderMinutes: Int = 0
+    val reminderMinutes: Int = 15
 ) 

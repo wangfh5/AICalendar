@@ -43,6 +43,27 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.7"
     }
+    packaging {
+        resources {
+            excludes += "META-INF/groovy/org.codehaus.groovy.runtime.ExtensionModule"
+            excludes += "META-INF/groovy-release-info.properties"
+            excludes += "META-INF/DEPENDENCIES"
+            excludes += "META-INF/LICENSE"
+            excludes += "META-INF/LICENSE.txt"
+            excludes += "META-INF/license.txt"
+            excludes += "META-INF/NOTICE"
+            excludes += "META-INF/NOTICE.txt"
+            excludes += "META-INF/notice.txt"
+            excludes += "META-INF/ASL2.0"
+            excludes += "META-INF/*.kotlin_module"
+            excludes += "META-INF/groovy/**"
+            excludes += "META-INF/services/**"
+            excludes += "META-INF/*.properties"
+            excludes += "META-INF/INDEX.LIST"
+            excludes += "META-INF/versions/**"
+            excludes += "META-INF/maven/**"
+        }
+    }
 }
 
 dependencies {
@@ -79,8 +100,14 @@ dependencies {
     implementation("androidx.hilt:hilt-navigation-compose:1.0.0")
 
     // Calendar handling
-    implementation("net.sf.biweekly:biweekly:0.6.7")
-
+    implementation("org.mnode.ical4j:ical4j:3.2.14")
+    // Required by ical4j
+    implementation("org.slf4j:slf4j-api:1.7.36")
+    implementation("org.slf4j:slf4j-simple:1.7.36")
+    implementation("commons-codec:commons-codec:1.15")
+    implementation("org.apache.commons:commons-lang3:3.12.0")
+    implementation("org.apache.commons:commons-collections4:4.4")
+    
     // DataStore for preferences
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 
