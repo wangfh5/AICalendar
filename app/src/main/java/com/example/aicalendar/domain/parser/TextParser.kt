@@ -18,12 +18,17 @@ import javax.inject.Singleton
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.ZoneId
+import java.util.concurrent.TimeUnit
 
 @Singleton
 class TextParser @Inject constructor(
     private val preferencesManager: PreferencesManager
 ) {
-    private val client = OkHttpClient()
+    private val client = OkHttpClient.Builder()
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(120, TimeUnit.SECONDS)
+        .build()
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
     private val timezone = ZoneId.systemDefault()
     
@@ -81,7 +86,10 @@ Rules:
 4. Location handling:
    - If no location is specified, return null
    - Keep the exact location name as provided
-   - For online meetings without specific location, use "Online" for English, "线上" for Chinese
+   - For online meetings:
+     * Use "Online" (English) or "线上" (Chinese) as location
+     * DO NOT remove meeting details from description
+     * Meeting details (ID, password, etc.) MUST stay in description
 
 5. Attendee rules:
    - Extract all email addresses as attendees
@@ -93,14 +101,33 @@ Rules:
    - Parse explicit reminder times (e.g., "remind me 1 hour before" -> 60)
    - For important meetings/presentations, set default reminder to 30 minutes
 
-7. Title and description:
+7. Title rules:
    - Make the summary concise but informative
    - Include the meeting type (e.g., "Team Meeting"/"团队会议", "Client Meeting"/"客户会议")
-   - For description, preserve all important details while improving readability:
-     - Keep all event-specific information (abstract, agenda, biography, etc.)
-     - Preserve technical details (meeting links, IDs, passwords, etc.)
-     - Remove only information that's already covered by other fields (time, location, basic attendee list)
-     - Format the text for better readability (add line breaks, sections, etc.)"""
+   - For academic talks, use the format: "[Series Name] [Talk Title]"
+
+8. Description rules:
+   - IMPORTANT: Keep the text AS IS, only remove duplicated basic event info
+   - DO NOT try to make the description concise
+   - CRITICAL: Meeting connection details MUST be preserved:
+     * Meeting platform (Zoom, Teams, Tencent Meeting, 腾讯会议等)
+     * Meeting ID/room number
+     * Meeting passwords/passcode
+     * Meeting links
+     * Any other connection instructions
+   - DO NOT remove or modify any of these:
+     * References and citations
+     * Bibliography/reference list
+     * Technical details
+     * Abstract content
+     * Biography
+   - Only remove information that is exactly duplicated in other fields:
+     * Basic time/date info (but keep timezone information)
+     * Basic location info (but keep online meeting details)
+     * Basic attendee list
+   - Keep the original text structure and formatting
+     * Add line breaks between sections
+     * For Bibliography/reference list, each item should be on a new line"""
     }
 
     /**

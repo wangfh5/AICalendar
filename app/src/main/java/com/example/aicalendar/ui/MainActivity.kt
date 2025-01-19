@@ -71,6 +71,7 @@ fun MainScreen(
     
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val apiKey by viewModel.apiKey.collectAsStateWithLifecycle(initialValue = null)
+    val textLength by viewModel.textLength.collectAsStateWithLifecycle()
     
     Column(
         modifier = Modifier
@@ -120,7 +121,10 @@ fun MainScreen(
         // 可滚动的文本输入区域
         OutlinedTextField(
             value = inputText,
-            onValueChange = { inputText = it },
+            onValueChange = { 
+                inputText = it
+                viewModel.updateTextLength(it)
+            },
             modifier = Modifier
                 .weight(1f)  // 占用剩余空间
                 .fillMaxWidth()
@@ -128,6 +132,16 @@ fun MainScreen(
             label = { Text("输入事件描述") },
             textStyle = TextStyle(fontSize = 16.sp),
             maxLines = Int.MAX_VALUE  // 允许多行输入
+        )
+
+        // 字数统计显示
+        Text(
+            text = "$textLength/${MainViewModel.MAX_TEXT_LENGTH}",
+            color = if (textLength > MainViewModel.MAX_TEXT_LENGTH) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+            style = MaterialTheme.typography.bodySmall
         )
 
         // 固定在底部的按钮
@@ -147,6 +161,20 @@ fun MainScreen(
         when (val state = uiState) {
             is UiState.Loading -> {
                 CircularProgressIndicator()
+            }
+            is UiState.Processing -> {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(8.dp)
+                ) {
+                    CircularProgressIndicator()
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = state.progress,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
             is UiState.Success -> {
                 Text(
