@@ -36,10 +36,24 @@ class MainViewModel @Inject constructor(
     val textLength: StateFlow<Int> = _textLength.asStateFlow()
 
     val apiKey = preferencesManager.apiKey
+    val baseUrl = preferencesManager.baseUrl
+    val modelName = preferencesManager.modelName
 
     fun updateApiKey(apiKey: String) {
         viewModelScope.launch {
             preferencesManager.saveApiKey(apiKey)
+        }
+    }
+
+    fun updateBaseUrl(baseUrl: String) {
+        viewModelScope.launch {
+            preferencesManager.saveBaseUrl(baseUrl)
+        }
+    }
+
+    fun updateModelName(modelName: String) {
+        viewModelScope.launch {
+            preferencesManager.saveModelName(modelName)
         }
     }
 

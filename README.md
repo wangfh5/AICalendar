@@ -45,7 +45,29 @@ app/
 4. 如遇到依赖问题，请尝试 "File -> Invalidate Caches / Restart"
 
 ### 基本设置
-1. 首次使用时，在APP的侧边栏设置 [DeepSeek](https://platform.deepseek.com/) API密钥
+1. 首次使用时需要在APP的设置中配置以下信息：
+   a) API密钥（必填）：
+   - 支持所有兼容OpenAI SDK的大语言模型服务商
+   - 可以使用以下任意服务商的API密钥：
+     * OpenAI API（默认）
+     * DeepSeek API
+     * Claude API
+     * 其他兼容OpenAI SDK的服务商
+
+   b) Base URL（选填）：
+   - 默认值：https://api.openai.com/v1
+   - 根据你选择的服务商修改，例如：
+     * OpenAI API：保持默认值
+     * DeepSeek API：https://api.deepseek.com/v1
+     * 其他服务商：参考对应的API文档
+
+   c) 模型名称（选填）：
+   - 默认值：gpt-3.5-turbo
+   - 可以根据你的需求选择不同的模型，例如：
+     * OpenAI：gpt-4、gpt-3.5-turbo等
+     * DeepSeek：deepseek-chat等
+     * 其他服务商：参考对应的模型列表
+
 2. 确保应用有网络访问和日历读写权限
 
 ### 创建日历事件
@@ -91,4 +113,3 @@ app/
 
 ## 许可证
 MIT License
-

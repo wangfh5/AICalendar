@@ -136,72 +136,73 @@ Rules:
     suspend fun parseText(text: String): Result<EventData> = withContext(Dispatchers.IO) {
         try {
             val apiKey = preferencesManager.apiKey.first()
-            if (apiKey.isNullOrEmpty()) {
-                return@withContext Result.failure(IllegalStateException("API key not set"))
-            }
+            val baseUrl = preferencesManager.baseUrl.first()
+            val modelName = preferencesManager.modelName.first()
             
-            val requestBody = JSONObject().apply {
-                put("model", "deepseek-chat")
-                put("messages", JSONArray().apply {
-                    put(JSONObject().apply {
-                        put("role", "system")
-                        put("content", getSystemPrompt())
-                    })
-                    put(JSONObject().apply {
-                        put("role", "user")
-                        put("content", text)
-                    })
+            if (apiKey.isNullOrBlank()) {
+                return@withContext Result.failure(IllegalStateException("请先设置API密钥"))
+            }
+
+            val prompt = getSystemPrompt()
+            val messages = JSONArray().apply {
+                put(JSONObject().apply {
+                    put("role", "system")
+                    put("content", prompt)
                 })
-                put("temperature", 0.7)
-                put("max_tokens", 1000)
-            }.toString()
-            
-            val request = Request.Builder()
-                .url("https://api.deepseek.com/v1/chat/completions")
-                .addHeader("Authorization", "Bearer $apiKey")
-                .post(requestBody.toRequestBody("application/json".toMediaType()))
-                .build()
-                
-            client.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) {
-                    val errorBody = response.body?.string() ?: ""
-                    return@withContext Result.failure(Exception("API call failed (${response.code}): $errorBody"))
-                }
-                
-                val responseJson = JSONObject(response.body?.string() ?: "")
-                val content = responseJson.getJSONArray("choices")
-                    .getJSONObject(0)
-                    .getJSONObject("message")
-                    .getString("content")
-                    
-                // Extract JSON string from content
-                val jsonStart = content.indexOf("{")
-                val jsonEnd = content.lastIndexOf("}") + 1
-                if (jsonStart == -1 || jsonEnd == -1) {
-                    return@withContext Result.failure(Exception("Invalid response format: $content"))
-                }
-                
-                val eventJsonStr = content.substring(jsonStart, jsonEnd)
-                try {
-                    val eventJson = JSONObject(eventJsonStr)
-                    
-                    val eventData = EventData(
-                        summary = eventJson.getString("summary"),
-                        startTime = dateFormat.parse(eventJson.getString("startTime"))!!,
-                        endTime = dateFormat.parse(eventJson.getString("endTime"))!!,
-                        description = eventJson.optString("description").takeIf { it.isNotEmpty() },
-                        location = eventJson.optString("location").takeIf { it.isNotEmpty() },
-                        attendees = eventJson.optJSONArray("attendees")?.let { array ->
-                            List(array.length()) { array.getString(it) }
-                        } ?: emptyList(),
-                        reminderMinutes = eventJson.optInt("reminderMinutes", 15)
-                    )
-                    
-                    Result.success(eventData)
-                } catch (e: Exception) {
-                    Result.failure(Exception("Failed to parse event data: ${e.message}\nContent: $content"))
-                }
+                put(JSONObject().apply {
+                    put("role", "user")
+                    put("content", text)
+                })
             }
+
+            val requestBody = JSONObject().apply {
+                put("model", modelName)
+                put("messages", messages)
+                put("temperature", 0.1)
+            }.toString().toRequestBody("application/json".toMediaType())
+
+            val request = Request.Builder()
+                .url("$baseUrl/chat/completions")
+                .addHeader("Authorization", "Bearer $apiKey")
+                .post(requestBody)
+                .build()
+
+            val response = client.newCall(request).execute()
+            val responseBody = response.body?.string()
+
+            if (!response.isSuccessful || responseBody == null) {
+                return@withContext Result.failure(Exception(
+                    "API请求失败: ${response.code} ${response.message}\n" +
+                    "响应内容: $responseBody"
+                ))
+            }
+
+            val jsonResponse = JSONObject(responseBody)
+            val content = jsonResponse
+                .getJSONArray("choices")
+                .getJSONObject(0)
+                .getJSONObject("message")
+                .getString("content")
+
+            val eventJson = JSONObject(content)
+            val eventData = EventData(
+                summary = eventJson.getString("summary"),
+                startTime = dateFormat.parse(eventJson.getString("startTime"))!!,
+                endTime = dateFormat.parse(eventJson.getString("endTime"))!!,
+                location = if (eventJson.isNull("location")) null else eventJson.getString("location"),
+                description = if (eventJson.isNull("description")) null else eventJson.getString("description"),
+                attendees = mutableListOf<String>().apply {
+                    if (!eventJson.isNull("attendees")) {
+                        val attendeesArray = eventJson.getJSONArray("attendees")
+                        for (i in 0 until attendeesArray.length()) {
+                            add(attendeesArray.getString(i))
+                        }
+                    }
+                },
+                reminderMinutes = if (eventJson.isNull("reminderMinutes")) 15 else eventJson.getInt("reminderMinutes")
+            )
+
+            Result.success(eventData)
         } catch (e: Exception) {
             Result.failure(e)
         }

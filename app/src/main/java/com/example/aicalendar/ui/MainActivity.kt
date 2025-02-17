@@ -71,6 +71,8 @@ fun MainScreen(
     
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val apiKey by viewModel.apiKey.collectAsStateWithLifecycle(initialValue = null)
+    val baseUrl by viewModel.baseUrl.collectAsStateWithLifecycle(initialValue = "https://api.openai.com/v1")
+    val modelName by viewModel.modelName.collectAsStateWithLifecycle(initialValue = "gpt-3.5-turbo")
     val textLength by viewModel.textLength.collectAsStateWithLifecycle()
     
     Column(
@@ -79,22 +81,53 @@ fun MainScreen(
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // API Key Dialog
+        // API Settings Dialog
         if (showApiKeyDialog) {
             var apiKeyInput by remember { mutableStateOf(apiKey ?: "") }
+            var baseUrlInput by remember { mutableStateOf(baseUrl) }
+            var modelNameInput by remember { mutableStateOf(modelName) }
+            
             AlertDialog(
                 onDismissRequest = { showApiKeyDialog = false },
-                title = { Text("设置API密钥") },
+                title = { Text("API设置") },
                 text = {
-                    TextField(
-                        value = apiKeyInput,
-                        onValueChange = { apiKeyInput = it },
-                        label = { Text("API密钥") }
-                    )
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // API Key
+                        OutlinedTextField(
+                            value = apiKeyInput,
+                            onValueChange = { apiKeyInput = it },
+                            label = { Text("API密钥") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        
+                        // Base URL
+                        OutlinedTextField(
+                            value = baseUrlInput,
+                            onValueChange = { baseUrlInput = it },
+                            label = { Text("Base URL") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        
+                        // Model Name
+                        OutlinedTextField(
+                            value = modelNameInput,
+                            onValueChange = { modelNameInput = it },
+                            label = { Text("模型名称") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 },
                 confirmButton = {
                     TextButton(onClick = {
                         viewModel.updateApiKey(apiKeyInput)
+                        viewModel.updateBaseUrl(baseUrlInput)
+                        viewModel.updateModelName(modelNameInput)
                         showApiKeyDialog = false
                     }) {
                         Text("确定")
